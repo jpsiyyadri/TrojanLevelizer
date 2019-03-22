@@ -5,34 +5,76 @@ import sys
 
 start = time.time()
 file_name = "s27combotroj.xlsx"
-book = xlrd.open_workbook(file_name)
-sheet_0 = book.sheet_by_index(0)
+def get_sheet(file_source_name):
+    book = xlrd.open_workbook(file_source_name)
+    sheet_0 = book.sheet_by_index(0)
+    return sheet_0
 
-# load nets.xlsx and load combinationaltroj_nets.xlsx
-file_name_nets = "s27nets.xlsx"
-book_nets = xlrd.open_workbook(file_name_nets)
-sheet_nets_0 = book_nets.sheet_by_index(0)
+sheet_0 = get_sheet(file_name)
+sheet_nets_0 = get_sheet("s27nets.xlsx")
+sheet_combinationaltroj_nets_0 = get_sheet("s27combinationaltrojan_nets.xlsx")
+sheet_power_0 = get_sheet("s27power.xlsx")
+sheet_combinationaltroj_power_0 = get_sheet("s27combinationaltrojan_power.xlsx")
 
-file_name_combinationaltroj_nets = "s27combinationaltrojan_nets.xlsx"
-book_combinationaltroj_nets = xlrd.open_workbook(file_name_combinationaltroj_nets)
-sheet_combinationaltroj_nets_0 = book_combinationaltroj_nets.sheet_by_index(0)
+def get_list(sheet_, col_):
+    rows = sheet_.nrows
+    list_ = []
+    for row_index in range(5, rows): # this condition checks are there any non visited rows?
+        row_dict = {}
+        for i in range(0, len(col_)-1):
+            row_dict[col_[i]] = sheet_.cell_value(rowx=row_index, colx=i)
+        list_.append(row_dict)
+    return list_
+
 # compare these two file and print non existed nets and count param change for existed net
-sheet_rows = book_combinationaltroj_nets.rows()
-sheet_columns = book_combinationaltroj_nets.columns()
-# variables: the_attributes_of_net -> stores param change count
+def get_attribute_dict(normal_list, trojan_list):
+    dict_ = {}
+    for row in normal_list:
+        non_existed = True
+        for trojan_row in trojan_list:
+            if(row['net'] == trojan_row['net']):
+                non_existed = False
+                param_change = 0
+                for  k,v in row.items():
+                    if(trojan_row[k]!=v):
+                        param_change += 1
+                dict_[row['net']] = param_change
+                break
+        if(non_existed):
+            print("{0}".format(row['net']))
+    return dict_
 
-# load power.xlsx and load combinationaltroj_power.xlsx
-file_name_power = "s27power.xlsx"
-book_nets = xlrd.open_workbook(file_name_power)
-sheet_nets_0 = book_nets.sheet_by_index(0)
+list_nets = get_list(
+                        sheet_nets_0, [
+                                        'net', 'fanout', 'fanin',
+                                        'load', 'resistance', 'pins', 'attributes'
+                                    ]
+                    )
 
-file_name_combinationaltroj_power = "s27combinationaltrojan_power.xlsx"
-book_combinationaltroj_power = xlrd.open_workbook(file_name_combinationaltroj_power)
-sheet_combinationaltroj_power_0 = book_combinationaltroj_power.sheet_by_index(0)
-# compare these two files and print non existed new and count param chhange for existed new
-# variables: the_attributes_of_power -> stores param change count
+list_trojan_nets = get_list(
+                                sheet_combinationaltroj_nets_0, [
+                                                                    'net', 'fanout', 'fanin',
+                                                                    'load', 'resistance', 'pins',
+                                                                    'attributes'
+                                                                ]
+                            )
 
+list_power = get_list(
+                        sheet_power_0, [
+                                        'net', 'net load', 'prob',
+                                        'rate', 'power'
+                                    ]
+                    )
 
+list_trojan_power = get_list(
+                                sheet_combinationaltroj_power_0, [
+                                                        'net', 'net load', 'prob',
+                                                        'rate', 'power'
+                                                    ]
+                            )
+
+the_attributes_of_net = get_attribute_dict(list_nets, list_trojan_nets)
+the_attributes_of_power = get_attribute_dict(list_power, list_trojan_power)
 
 all_n_values = {}
 all_n_counts = {}
@@ -51,7 +93,6 @@ for elem in outputs:
 for k,v in primary_outputs.items():
     if(k not in all_n_values.keys()):
         all_n_values[k] = v
-
 
 def count_n(intermed_n):
     if(intermed_n in all_n_counts.keys()):
@@ -131,8 +172,6 @@ sheet1.write(i, 7, 'strategy pay off 2')
 sheet1.write(i, 8, 'strategy pay off 3')
 sheet1.write(i,9,'lowest allowable fine')
 
-
-
 i += 1
 max_score = 0
 min_score = sys.maxsize
@@ -144,6 +183,10 @@ for key, value in all_n_counts.items():
     sheet1.write(i, 3, final_output[key]['pi'])
     sheet1.write(i, 4, final_output[key]['po'])
     score = value + all_n_values[key]+final_output[key]['pi']+final_output[key]['po']
+    if(key in the_attributes_of_net.keys()):
+        score += the_attributes_of_net[key]
+    if(key in the_attributes_of_power.keys()):
+        score += the_attributes_of_power[key]
     # to-do:  add the_attribute_net['net'] + the_attribute_power['net load']
     # print('{0} {1} {2}'.format(score, min_score, max_score))
     if(score < min_score):
