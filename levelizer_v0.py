@@ -27,21 +27,25 @@ def get_list(sheet_, col_):
     return list_
 
 # compare these two file and print non existed nets and count param change for existed net
-def get_attribute_dict(normal_list, trojan_list):
+def find_non_existed(list_1, list_2):
     dict_ = {}
-    for row in normal_list:
+    for row_1 in list_1:
         non_existed = True
-        for trojan_row in trojan_list:
-            if(row['net'] == trojan_row['net']):
+        for row_2 in list_2:
+            if(row_1['net'] == row_2['net']):
                 non_existed = False
                 param_change = 0
-                for  k,v in row.items():
-                    if(trojan_row[k]!=v):
+                for  k,v in row_1.items():
+                    if(row_2[k]!=v):
                         param_change += 1
-                dict_[row['net']] = param_change
+                dict_[row_1['net']] = param_change
                 break
         if(non_existed):
-            print("{0}".format(row['net']))
+            print("{0}".format(row_1['net']))
+    return dict_
+def get_attribute_dict(normal_list, trojan_list):
+    dict_ = find_non_existed(normal_list, trojan_list)
+    find_non_existed(trojan_list, normal_list)
     return dict_
 
 list_nets = get_list(
