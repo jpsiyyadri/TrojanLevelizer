@@ -23,12 +23,14 @@ def get_list(sheet_, col_):
         row_dict = {}
         for i in range(0, len(col_)-1):
             row_dict[col_[i]] = sheet_.cell_value(rowx=row_index, colx=i)
-        list_.append(row_dict)
+        if(row_dict[col_[0]]!=''):
+            list_.append(row_dict)
     return list_
 
 # compare these two file and print non existed nets and count param change for existed net
 def find_non_existed(list_1, list_2):
     dict_ = {}
+    defective = False
     for row_1 in list_1:
         non_existed = True
         for row_2 in list_2:
@@ -41,11 +43,17 @@ def find_non_existed(list_1, list_2):
                 dict_[row_1['net']] = param_change
                 break
         if(non_existed):
-            print("{0}".format(row_1['net']))
-    return dict_
+            defective = True
+            print("non existed {0}".format(row_1['net']))
+    return dict_, defective
+
 def get_attribute_dict(normal_list, trojan_list):
-    dict_ = find_non_existed(normal_list, trojan_list)
-    find_non_existed(trojan_list, normal_list)
+    # print("normal list {0}".format(normal_list))
+    # print("trojan list {0}".format(trojan_list))
+    dict_, defective = find_non_existed(normal_list, trojan_list)
+    dict_1, defective_1 = find_non_existed(trojan_list, normal_list)
+    if(defective | defective_1):
+        print('The circuit is defective')
     return dict_
 
 list_nets = get_list(
