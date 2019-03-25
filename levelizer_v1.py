@@ -47,7 +47,7 @@ def find_non_existed(list_1, list_2):
             defective = True
             non_existed_list.append(row_1['net'])
             # print("non existed {0}".format(row_1['net']))
-    return dict_, defective, non_existed_list
+    return dict_, non_existed_list
 set_param_change_list = []
 set_non_existed_list = []
 def unique(list1): 
@@ -63,8 +63,8 @@ def unique(list1):
 def get_attribute_dict(normal_list, trojan_list):
     # print("normal list {0}".format(normal_list))
     # print("trojan list {0}".format(trojan_list))
-    dict_, defective, non_existed_list_1 = find_non_existed(normal_list, trojan_list)
-    dict_1, defective_1, non_existed_list_2 = find_non_existed(trojan_list, normal_list)
+    dict_, non_existed_list_1 = find_non_existed(normal_list, trojan_list)
+    dict_1, non_existed_list_2 = find_non_existed(trojan_list, normal_list)
     set_non_existed_list.append(unique(non_existed_list_1 + non_existed_list_2))
     list_change_nets = []
     for k,v in dict_.items():
@@ -77,8 +77,6 @@ def get_attribute_dict(normal_list, trojan_list):
             list_change_nets.append(k)
     # print("param change list {0}".format(set(list_change_nets)))
     set_param_change_list.append(list_change_nets)
-    if(defective):
-        print('The circuit is defective')
     return dict_
 
 list_nets = get_list(
@@ -115,8 +113,15 @@ the_attributes_of_power = get_attribute_dict(list_power, list_trojan_power)
 
 set_param_change_list = [value for value in set_param_change_list[0] if value in set_param_change_list[1]]
 
-print("param change nets {0}".format(set(set_param_change_list)))
-print("non existed nets {0}".format(set(set_non_existed_list[0]+set_non_existed_list[1])))
+present_in_param_change = set(set_param_change_list)
+present_in_existed = set(set_non_existed_list[0]+set_non_existed_list[1])
+if(len(present_in_existed)>0 | len(present_in_param_change)>0):
+    print("------ defective circuit -----------")
+if(len(present_in_existed)>0):
+    print("param change nets {0}".format(present_in_existed))
+if(len(present_in_param_change)>0):
+    print("non existed nets {0}".format(present_in_param_change))
+
 all_n_values = {}
 all_n_counts = {}
 
