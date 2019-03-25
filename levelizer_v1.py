@@ -166,12 +166,13 @@ while(len(non_visited_index) > 0): # this condition checks are there any non vis
     for row_index in non_visited_index: # visit non visited row indexes
         # for each row at last column we have operands N1,N5 it stores in gate_inputs
         gate_inputs = sheet_0.cell_value(rowx=row_index, colx=last_column).split(',')
-        intermed_n = sheet_0.cell_value(rowx=row_index, colx=2)
+        intermed_n = sheet_0.cell_value(rowx=row_index, colx=2).split(",")
         # print(row_index)
         if(all_exists(gate_inputs)):
             calc_val = formulae(gate_inputs)
-            middle_outputs[intermed_n] = calc_val
-            all_n_values[intermed_n] = calc_val
+            for x in intermed_n:
+                middle_outputs[x] = calc_val
+                all_n_values[x] = calc_val
             visited_index.append(row_index)
     for v_index in visited_index:
         non_visited_index.remove(v_index)
