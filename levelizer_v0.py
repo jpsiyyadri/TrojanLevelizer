@@ -4,17 +4,17 @@ import xlwt
 import sys
 
 start = time.time()
-file_name = "s27combotroj.xlsx"
+file_name = "c432countertrojan.xlsx"
 def get_sheet(file_source_name):
     book = xlrd.open_workbook(file_source_name)
     sheet_0 = book.sheet_by_index(0)
     return sheet_0
 
 sheet_0 = get_sheet(file_name)
-sheet_nets_0 = get_sheet("s27nets.xlsx")
-sheet_combinationaltroj_nets_0 = get_sheet("s27combinationaltrojan_nets.xlsx")
-sheet_power_0 = get_sheet("s27power.xlsx")
-sheet_combinationaltroj_power_0 = get_sheet("s27combinationaltrojan_power.xlsx")
+sheet_nets_0 = get_sheet("c432netsreport.xlsx")
+sheet_combinationaltroj_nets_0 = get_sheet("c432sequentialtrojannetsreport.xlsx")
+sheet_power_0 = get_sheet("c432gcpowerreport.xlsx")
+sheet_combinationaltroj_power_0 = get_sheet("c432sequentialtrojanpowerreport.xlsx")
 
 def get_list(sheet_, col_):
     rows = sheet_.nrows
@@ -30,6 +30,7 @@ def get_list(sheet_, col_):
 # compare these two file and print non existed nets and count param change for existed net
 def find_non_existed(list_1, list_2):
     dict_ = {}
+    non_existed_list = []
     defective = False
     for row_1 in list_1:
         non_existed = True
@@ -44,15 +45,39 @@ def find_non_existed(list_1, list_2):
                 break
         if(non_existed):
             defective = True
-            print("non existed {0}".format(row_1['net']))
-    return dict_, defective
+            non_existed_list.append(row_1['net'])
+            # print("non existed {0}".format(row_1['net']))
+    return dict_, defective, non_existed_list
+set_param_change_list = []
+set_non_existed_list = []
+def unique(list1): 
+    # intilize a null list 
+    unique_list = [] 
+    # traverse for all elements 
+    for x in list1: 
+        # check if exists in unique_list or not 
+        if x not in unique_list: 
+            unique_list.append(x)
+    return unique_list
 
 def get_attribute_dict(normal_list, trojan_list):
     # print("normal list {0}".format(normal_list))
     # print("trojan list {0}".format(trojan_list))
-    dict_, defective = find_non_existed(normal_list, trojan_list)
-    dict_1, defective_1 = find_non_existed(trojan_list, normal_list)
-    if(defective | defective_1):
+    dict_, defective, non_existed_list_1 = find_non_existed(normal_list, trojan_list)
+    dict_1, defective_1, non_existed_list_2 = find_non_existed(trojan_list, normal_list)
+    set_non_existed_list.append(unique(non_existed_list_1 + non_existed_list_2))
+    list_change_nets = []
+    for k,v in dict_.items():
+        if(v>0):
+            # print("param change net {0}".format(k))
+            list_change_nets.append(k)
+    for k,v in dict_1.items():
+        if(v>0):
+            # print("param change net {0}".format(k))
+            list_change_nets.append(k)
+    # print("param change list {0}".format(set(list_change_nets)))
+    set_param_change_list.append(list_change_nets)
+    if(defective):
         print('The circuit is defective')
     return dict_
 
@@ -88,6 +113,10 @@ list_trojan_power = get_list(
 the_attributes_of_net = get_attribute_dict(list_nets, list_trojan_nets)
 the_attributes_of_power = get_attribute_dict(list_power, list_trojan_power)
 
+set_param_change_list = [value for value in set_param_change_list[0] if value in set_param_change_list[1]]
+
+print("param change nets {0}".format(set(set_param_change_list)))
+print("non existed nets {0}".format(set(set_non_existed_list[0]+set_non_existed_list[1])))
 all_n_values = {}
 all_n_counts = {}
 
