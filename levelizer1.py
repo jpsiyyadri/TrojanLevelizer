@@ -2,6 +2,7 @@ import time
 start = time. time()
 import xlrd
 import xlwt
+import pandas as pd
 
 file_name = "c17.xlsx"
 book = xlrd.open_workbook(file_name)
@@ -79,9 +80,9 @@ def  calc_gate(input_gates, gate):
     elif(gate=="xnor"):
         return 1 - (tp_0 + tp_1)
     elif(gate=='not'):
-        return {'tp0': tp_1, 'tp1': tp_0}
+        return {'tp_0': tp_1, 'tp_1': tp_0}
     else:
-        return {'tp0': tp_0, 'tp1': tp_1}
+        return {'tp_0': tp_0, 'tp_1': tp_1}
 
 
 rows = sheet_0.nrows # all rows in excel except first 3 rows as they are occupied for inputs and outputs 202
@@ -178,4 +179,8 @@ for gate, score in all_scores.items():
                 isSusceptable = True
         if(isSusceptable):
             print('susceptable nets: {0}'.format(gate))
+out_tp_list = []
+for gate, tp_val in tp_dict.items():
+    out_tp_list.append({'nets': gate, 'tp values': tp_val})
+pd.DataFrame(out_tp_list).to_excel(file_name.split('.')[0]+"_tp_values.xlsx")
 print(tp_dict)
